@@ -84,6 +84,8 @@ window.addEventListener('load',function(){if(typeof THREE==='undefined')show('th
 </script>
 <script src="three.min.js"></script>
 <script>if(typeof THREE==="undefined")document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.6.10/umd/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 
 <script>
 (function(){
@@ -280,6 +282,20 @@ function addPlot(x,z,ci,st,t,re){const d=CR[ci],T=d.t*S.g*(S.own.wa?.85:1),p={x,
 const ready=p=>{p.st=2;p.crop.userData.root.visible=true;if(!p.re)p.crop.scale.setScalar(1)};
 function harvest(p){const d=p.d,v=yv(d);if(d.k==='t'){p.st=1;p.t=p.T;p.re=1;p.crop.userData.root.visible=false}else if(d.k==='d'){p.st=3;p.crop.userData.root.visible=false;p.crop.position.y=.06}else{scene.remove(p.crop);plots.splice(plots.indexOf(p),1)}S.hv++;gain(v);return v}
 const pl=char({skin:0xe9b98f,hair:0x4a2a14,top:0x2f8bff,bot:0x1f55c8,acc:'straw'});pl.scale.setScalar(1.25);pl.position.set(3,0,-8);scene.add(pl);pl.rotation.order='YXZ';pl.traverse(o=>o.castShadow=false);pl.userData.bl=blob();
+/* تحميل شخصية الفلاح الخارجية مع إبقاء الشخصية الأصلية كخطة احتياطية */
+(function loadPeasant(){
+ if(!THREE.FBXLoader)return;
+ try{const loader=new THREE.FBXLoader();loader.setResourcePath('assets/');loader.load('assets/peasant_1.fbx',function(model){
+   model.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3());
+   if(!size.y||!isFinite(size.y))throw new Error('قياس الشخصية غير صالح');
+   model.scale.multiplyScalar(2.05/size.y);model.updateMatrixWorld(true);box.setFromObject(model);
+   model.position.x-=(box.min.x+box.max.x)/2;model.position.z-=(box.min.z+box.max.z)/2;model.position.y-=box.min.y;
+   model.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.map){m.map.encoding=THREE.sRGBEncoding;m.map.needsUpdate=true}m.needsUpdate=true})}}});
+   pl.children.forEach(o=>{if(o!==pl.userData.bl)o.visible=false});
+   const holder=new THREE.Group();holder.add(model);pl.add(holder);pl.userData.externalModel=holder;
+   pl.userData.externalTool=null;
+ },undefined,function(err){console.warn('تعذر تحميل شخصية الفلاح، سيبقى الشكل الأصلي.',err)});}catch(e){console.warn(e)}
+})();
 /* صوت */
 let AC;const ac=()=>AC||(AC=new(window.AudioContext||window.webkitAudioContext)());
 function tn(f,d,t,v,f2,dl){if(S.vol<=0)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain(),n=c.currentTime+(dl||0);o.type=t||'sine';o.frequency.setValueAtTime(f,n);if(f2)o.frequency.exponentialRampToValueAtTime(f2,n+d);g.gain.setValueAtTime((v||.14)*S.vol,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(c.destination);o.start(n);o.stop(n+d)}catch(e){}}
@@ -413,10 +429,10 @@ const pe=e=>{ptr.delete(e.pointerId);if(ptr.size<2)pd=0};cv.addEventListener('po
 cv.addEventListener('wheel',e=>{e.preventDefault();tz=cZ(tz+e.deltaY*.002)},{passive:false});
 const turn=(o,a,k)=>o.rotation.y+=(((a-o.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI)*k;
 function blob(){const m=new THREE.Mesh(new THREE.CircleGeometry(.5,16),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.4,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));m.rotation.x=-Math.PI/2;scene.add(m);return m}
-function setTool(c,t){const u=c.userData;if(!u.tool){u.tool=new THREE.Group();u.tool.position.set(0,-.5,.05);u.arms[0].add(u.tool)}const g=u.tool;while(g.children.length)g.remove(g.children[0]);
+function setTool(c,t){const u=c.userData;if(u.externalModel){if(!u.externalTool){u.externalTool=new THREE.Group();u.externalTool.position.set(.34,.82,.18);u.externalTool.rotation.z=-.22;u.externalModel.add(u.externalTool)}const eg=u.externalTool;while(eg.children.length)eg.remove(eg.children[0]);eg.add(sz(mk(G.cyl,0x8a5a33,0,-.3,0),.025,.7,.025));if(t==='sickle'){const b=sz(mk(G.box,0xcfd8dc,0,-.62,.1),.03,.06,.3);b.rotation.x=.5;eg.add(b)}else if(t==='shovel')eg.add(sz(mk(G.box,0xcfd8dc,0,-.72,0),.14,.22,.02));else eg.add(sz(mk(G.box,0xcfd8dc,0,-.64,.1),.18,.05,.22));eg.visible=false;return}if(!u.tool){u.tool=new THREE.Group();u.tool.position.set(0,-.5,.05);u.arms[0].add(u.tool)}const g=u.tool;while(g.children.length)g.remove(g.children[0]);
  g.add(sz(mk(G.cyl,0x8a5a33,0,-.3,0),.025,.7,.025));
  if(t==='sickle'){const b=sz(mk(G.box,0xcfd8dc,0,-.62,.1),.03,.06,.3);b.rotation.x=.5;g.add(b)}else if(t==='shovel')g.add(sz(mk(G.box,0xcfd8dc,0,-.72,0),.14,.22,.02));else g.add(sz(mk(G.box,0xcfd8dc,0,-.64,.1),.18,.05,.22));g.visible=false}
-function anim(c,sp,dt,st,T){const u=c.userData;u.ph=(u.ph||0)+dt*(4+sp*1.6);const a=Math.min(1,sp/3.5)*.9,s=Math.sin(u.ph);let A=[s*a,-s*a],Lg=[-s*a,s*a];
+function anim(c,sp,dt,st,T){const u=c.userData;u.ph=(u.ph||0)+dt*(4+sp*1.6);if(u.externalModel){u.externalModel.position.y=(sp>.25?Math.abs(Math.sin(u.ph))*.035:st===1?Math.sin(T*12)*.02:0);if(u.externalTool)u.externalTool.visible=st===3;return}const a=Math.min(1,sp/3.5)*.9,s=Math.sin(u.ph);let A=[s*a,-s*a],Lg=[-s*a,s*a];
  if(st===1){A=[-2.5,-2.5];Lg=[-.7,.4]}else if(st===2){const w=T*5;A=[-1.5+Math.sin(w)*1.1,-1.5-Math.sin(w)*1.1];Lg=[Math.sin(w*1.6)*.5,-Math.sin(w*1.6)*.5]}else if(st===3){A=[-1.2+Math.sin(T*11)*.8,-.9];Lg=[0,0]}
  u.arms.forEach((m,i)=>m.rotation.x=A[i]);u.legs.forEach((m,i)=>m.rotation.x=Lg[i]);if(u.tool)u.tool.visible=st===3}
 const work=t=>{pl.userData.work=.6;setTool(pl,t)};
