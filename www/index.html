@@ -123,6 +123,9 @@ window.addEventListener('load',function(){if(typeof THREE==='undefined')show('th
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>if(typeof THREE==="undefined")document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>if(typeof THREE==="undefined")document.write('<script src="three.min.js"><\/script>')</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>if(typeof THREE!=="undefined"&&!THREE.GLTFLoader)document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"><\/script>')</script>
+<script>if(typeof THREE!=="undefined"&&!THREE.GLTFLoader)document.write('<script src="GLTFLoader.js"><\/script>')</script>
 
 <script>
 (function(){
@@ -218,6 +221,69 @@ for(let i=0,a=0,b=0;i<3000&&(a<350||b<500);i++){const x=rnd(-208,208),z=rnd(-208
  if(i&1&&a<350){const s=rnd(.25,.9);D.position.set(x,H(x,z)+s*.3,z);D.scale.set(s,s*.7,s);D.rotation.set(0,rnd(0,6),0);D.updateMatrix();rk.setMatrixAt(a++,D.matrix)}
  else if(b<500){const s=rnd(.4,.9);D.position.set(x,H(x,z)+s*.4,z);D.scale.set(s,s*.8,s);D.rotation.set(0,0,0);D.updateMatrix();bu.setMatrixAt(b,D.matrix);bu.setColorAt(b++,new THREE.Color([0x2fa83a,0x3fc04a,0x238f34,0x56d65a][i%4]))}}
 rk.castShadow=bu.castShadow=true;scene.add(rk,bu);
+/* ===== طبيعة glTF: مجسمات حقيقية تظهر قرب اللاعب فقط (assets/nature) ===== */
+const NAT=(()=>{
+const o={ready:false,lx:1e9,lz:1e9,last:-9,cats:[],hid:new Map()};
+if(!THREE.GLTFLoader){console.warn('NAT: GLTFLoader غير محمّل');return o}
+THREE.Cache.enabled=true;
+const DIR='assets/nature/',BL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+const mgr=new THREE.LoadingManager();mgr.setURLModifier(u=>/_Normal\.png/i.test(u)?BL:u);
+const ld=new THREE.GLTFLoader(mgr),MC={},LM={};
+const hs1=i=>{const q=Math.sin(i*127.1+311.7)*43758.5453;return q-Math.floor(q)};
+const okPos=(x,z,rr)=>!(roadD(x,z)<rr||lakeQ(x,z)<1.25||(Math.abs(x)<FX+2&&Math.abs(z)<FZ+2)||hs.some(h=>Math.hypot(x-h.x,z-h.z)<rr+4)||Math.hypot(x+32,z+12)<4);
+/* K=أقصى عدد قريب من اللاعب، R=أقصى مسافة، النطاقات [اسم,أصغر حجم,أكبر حجم] — أضف ملفات جديدة (صخور، بيوت...) هنا بسطر واحد */
+const CFG=[
+{id:'trees',K:55,R:55,cast:1,tp:1,F:[['CommonTree_1',.5],['CommonTree_2',.5],['CommonTree_3',.5],['CommonTree_4',.5],['CommonTree_5',.5]]},
+{id:'dead',K:8,R:80,cast:1,N:50,rr:8,F:[['DeadTree_1',.3,.45],['DeadTree_2',.3,.45],['DeadTree_3',.3,.42],['DeadTree_4',.28,.4],['DeadTree_5',.25,.36]]},
+{id:'bush',K:40,R:45,N:1500,rr:3,hide:'bu',F:[['Bush_Common',.7,1.1],['Bush_Common_Flowers',.7,1.1]]},
+{id:'flower',K:110,R:38,N:4000,rr:3,hide:'fl',F:[['Flower_3_Group',.2,.3],['Flower_3_Single',.2,.35],['Flower_4_Group',.2,.3],['Flower_4_Single',.2,.35]]},
+{id:'grass',K:210,R:30,N:9000,rr:2.2,F:[['Grass_Common_Short',.4,.7],['Grass_Common_Short',.4,.7],['Grass_Common_Short',.4,.7],['Clover_1',.35,.6],['Clover_2',.35,.6],['Fern_1',.14,.24]]}
+];
+function prep(n,root){root.updateMatrixWorld(true);const subs=[];
+ root.traverse(m=>{if(!m.isMesh)return;const mt=m.material;mt.normalMap=null;mt.needsUpdate=true;const mm=MC[mt.name]||(MC[mt.name]=mt);subs.push({g:m.geometry,m:mm,w:m.matrixWorld.clone()})});
+ LM[n]=subs}
+function build(){
+ const d0=new THREE.Object3D();
+ CFG.forEach(c=>{
+  const V=c.F.filter(f=>LM[f[0]]&&LM[f[0]].length);if(!V.length)return;
+  c.P=[];c.cap=Math.ceil(c.K*1.4)+2;
+  if(c.tp){let n=0;while(n<tp.length&&tp[n][2]<2.5)n++;
+   for(let i=0;i<n;i++){const t=tp[i],v=Math.floor(hs1(i+.5)*V.length)%V.length;c.P.push({x:t[0],z:t[1],y:t[3],v:v,s:t[2]*V[v][1],r:hs1(i*3.1)*6.28,pi:i})}}
+  else{for(let i=0,k=0;k<c.N&&i<c.N*6;i++){const x=rnd(-205,205),z=rnd(-205,205);if(!okPos(x,z,c.rr))continue;const v=Math.floor(rnd(0,V.length))%V.length;c.P.push({x:x,z:z,y:H(x,z),v:v,s:rnd(V[v][1],V[v][2]),r:rnd(0,6.28),pi:-1});k++}}
+  c.I=V.map(f=>LM[f[0]].map(s=>{const im=new THREE.InstancedMesh(s.g,s.m,c.cap);im.frustumCulled=false;im.castShadow=!!c.cast;im.count=0;scene.add(im);return{im:im,w:s.w}}));
+  if(c.hide==='bu')bu.visible=false;if(c.hide==='fl')fl.visible=false;
+  o.cats.push(c)});
+ o.d0=d0;o.m0=new THREE.Matrix4();o.ready=o.cats.length>0}
+o.tick=(px,pz,T)=>{
+ if(!o.ready)return;
+ const dx=px-o.lx,dz=pz-o.lz;if(dx*dx+dz*dz<6&&T-o.last<2)return;
+ o.lx=px;o.lz=pz;o.last=T;
+ const mult=[.45,1,1.4][S.q|0]||1,tl=typeof tiles!=='undefined'?tiles:[],want=new Set(),D=o.d0,M=o.m0;
+ o.cats.forEach(c=>{
+  const K=Math.max(1,Math.floor(c.K*mult)),r2=c.R*c.R,cand=[];
+  for(let i=0;i<c.P.length;i++){const p=c.P[i],ax=p.x-px,az=p.z-pz,d=ax*ax+az*az;if(d<r2){p.d=d;cand.push(p)}}
+  cand.sort((a,b)=>a.d-b.d);
+  const cnt=c.I.map(()=>0);let used=0;
+  for(let i=0;i<cand.length&&used<K;i++){const p=cand[i],k=cnt[p.v];if(k>=c.cap)continue;
+   if(tl.length&&tl.some(t=>Math.abs(t.x-p.x)<1.7&&Math.abs(t.z-p.z)<1.7))continue;
+   D.position.set(p.x,p.y,p.z);D.rotation.set(0,p.r,0);D.scale.setScalar(p.s);D.updateMatrix();
+   c.I[p.v].forEach(q=>{M.multiplyMatrices(D.matrix,q.w);q.im.setMatrixAt(k,M)});
+   cnt[p.v]++;used++;if(p.pi>=0)want.add(p.pi)}
+  c.I.forEach((subs,vi)=>subs.forEach(q=>{q.im.count=cnt[vi];q.im.instanceMatrix.needsUpdate=true}))});
+ /* إخفاء الأشجار المرسومة بالكود في أماكن الأشجار الحقيقية */
+ const hid=o.hid;let ch=false;const A=trI.instanceMatrix.array,B=lfI.instanceMatrix.array;
+ hid.forEach((sv,i)=>{if(!want.has(i)){A.set(sv[0],i*16);B.set(sv[1],i*32);B.set(sv[2],i*32+16);hid.delete(i);ch=true}});
+ want.forEach(i=>{if(!hid.has(i)){hid.set(i,[A.slice(i*16,i*16+16),B.slice(i*32,i*32+16),B.slice(i*32+16,i*32+32)]);
+  A.fill(0,i*16,i*16+16);A[i*16+15]=1;B.fill(0,i*32,i*32+32);B[i*32+15]=1;B[i*32+31]=1;ch=true}});
+ if(ch){trI.instanceMatrix.needsUpdate=true;lfI.instanceMatrix.needsUpdate=true}};
+const names=[...new Set(CFG.flatMap(c=>c.F.map(f=>f[0])))];let left=names.length,okN=0;
+const fin=()=>{if(--left>0)return;
+ build();
+ if(!okN)setTimeout(()=>toast('لم تُحمّل ملفات الطبيعة. تأكد أنها داخل assets/nature'),1800);
+ else if(okN<names.length)setTimeout(()=>toast('تحميل جزئي للطبيعة: '+okN+' من '+names.length+' مجسم'),1800)};
+names.forEach(n=>ld.load(DIR+n+'.gltf',g=>{try{prep(n,g.scene);okN++}catch(e){console.warn('NAT خطأ في',n,e)}fin()},undefined,()=>{console.warn('NAT ناقص:',n);fin()}));
+return o})();
+
 function char(s){
   const g=new THREE.Group(),k=s.skin,P=(m,x,y,z)=>{g.add(m);return m};
   P(sz(mk(G.cyl,s.top,0,.95,0),.27,.62,.22));
@@ -603,7 +669,7 @@ let npcN=false;
 const clk=new THREE.Clock(),mc=$('mm').getContext('2d');let lb0='',h4=0,ai0='',pr=0;
 function loop(){
   requestAnimationFrame(loop);
-  const dt=Math.min(clk.getDelta(),.05),T=clk.elapsedTime,busy=isM();
+  const dt=Math.min(clk.getDelta(),.05),T=clk.elapsedTime,busy=isM();NAT.tick(pl.position.x,pl.position.z,T);
   const WY=-.5,gh=H(pl.position.x,pl.position.z),wd=lakeQ(pl.position.x,pl.position.z)<1.12?WY-gh:0;swim=swim?wd>.5:wd>.75;const sw=swim;
   let ix=jv.x+((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0),iy=jv.y+((keys.w||keys.arrowup)?1:0)-((keys.s||keys.arrowdown)?1:0);
   const m=busy?0:Math.min(1,Math.hypot(ix,iy));
