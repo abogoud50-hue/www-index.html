@@ -226,7 +226,7 @@ const NAT=(()=>{
 const o={ready:false,lx:1e9,lz:1e9,last:-9,cats:[],hid:new Map()};
 if(!THREE.GLTFLoader){console.warn('NAT: GLTFLoader غير محمّل');return o}
 THREE.Cache.enabled=true;
-const DIR='assets/nature/',BL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+const DIR='../assets/nature/',BL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 const mgr=new THREE.LoadingManager();mgr.setURLModifier(u=>/_Normal\.png/i.test(u)?BL:u);
 const ld=new THREE.GLTFLoader(mgr),MC={},LM={};
 const hs1=i=>{const q=Math.sin(i*127.1+311.7)*43758.5453;return q-Math.floor(q)};
@@ -553,7 +553,7 @@ function anim(c,sp,dt,st,T){const u=c.userData;u.ph=(u.ph||0)+dt*(4+sp*1.6);if(u
 /* ===== شخصيات ثلاثية الأبعاد (GLB) ===== */
 const RDY=Promise.resolve(),GS={};
 /* ===== ملفات الحركة من مجلد assets ===== */
-const ANIM={ready:false,clips:{},sp:{},ref:.9167},AF=['assets/UAL1_Standard.glb','assets/UAL1_Standard_RM.glb','assets/UAL2_Standard.glb'],
+const ANIM={ready:false,clips:{},sp:{},ref:.9167},AF=['../assets/UAL1_Standard.glb','../assets/UAL1_Standard_RM.glb','../assets/UAL2_Standard.glb'],
  NEED=['A_TPose','Crouch_Fwd_Loop','Crouch_Idle_Loop','Dance_Loop','Death01','Idle_Loop','Idle_Talking_Loop','Idle_Torch_Loop','Interact','Jog_Fwd_Loop','Jump_Land','Jump_Loop','Jump_Start','PickUp_Table','Pistol_Aim_Down','Pistol_Aim_Neutral','Pistol_Aim_Up','Pistol_Idle_Loop','Pistol_Reload','Pistol_Shoot','Punch_Cross','Punch_Jab','Push_Loop','Roll','Sitting_Enter','Sitting_Exit','Sitting_Idle_Loop','Sitting_Talking_Loop','Spell_Simple_Enter','Spell_Simple_Exit','Spell_Simple_Idle_Loop','Spell_Simple_Shoot','Sprint_Loop','Swim_Fwd_Loop','Swim_Idle_Loop','Sword_Attack','Sword_Idle','Walk_Formal_Loop','Walk_Loop','Chest_Open','ClimbUp_1m','Consume','Farm_Harvest','Farm_PlantSeed','Farm_Watering','Hit_Knockback','Idle_FoldArms_Loop','Idle_Lantern_Loop','Idle_No_Loop','Idle_Rail_Call','Idle_Rail_Loop','Idle_Shield_Break','Idle_Shield_Loop','Idle_TalkingPhone_Loop','LayToIdle','Melee_Hook','Melee_Hook_Rec','NinjaJump_Idle_Loop','NinjaJump_Land','NinjaJump_Start','OverhandThrow','Shield_Dash','Shield_OneShot','Slide_Exit','Slide_Loop','Slide_Start','Sword_Block','Sword_Dash','Sword_Heavy_Combo','Sword_Regular_A','Sword_Regular_A_Rec','Sword_Regular_B','Sword_Regular_C','Sword_Regular_Combo','TreeChopping_Loop','Walk_Carry_Loop','Yes','Zombie_Idle_Loop','Zombie_Scratch','Zombie_Walk_Fwd_Loop'],
  SPD={get walk(){return ANIM.sp.Walk_Loop||.98},get jog(){return ANIM.sp.Jog_Fwd_Loop||5.37},get sprint(){return ANIM.sp.Sprint_Loop||8.2},get swim(){return ANIM.sp.Swim_Fwd_Loop||2.18}};
 function parseAnims(buf,rm){const dv=new DataView(buf),jl=dv.getUint32(12,true),js=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bin=20+jl+8,NC={SCALAR:1,VEC3:3,VEC4:4};
