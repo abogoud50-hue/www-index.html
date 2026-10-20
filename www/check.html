@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فحص ملفات اللعبة</title>
+<style>body{font:14px system-ui,sans-serif;background:#111;color:#eee;padding:12px;margin:0}
+.ok{color:#5f5}.bad{color:#f66;font-weight:bold}.s{margin:10px 0;padding:8px;background:#222;border-radius:8px}
+code{direction:ltr;unicode-bidi:embed;word-break:break-all;font-size:12px}</style></head>
+<body><h3>فحص ملفات اللعبة</h3><div id="o">جارٍ الفحص…</div>
+<script>
+const B='../assets/',N='nature/';
+const anim=['UAL1_Standard.glb','UAL1_Standard_RM.glb','UAL2_Standard.glb'];
+const nat=['CommonTree_1','CommonTree_2','CommonTree_3','CommonTree_4','CommonTree_5','DeadTree_1','DeadTree_2','DeadTree_3','DeadTree_4','DeadTree_5','Bush_Common','Bush_Common_Flowers','Flower_3_Group','Flower_3_Single','Flower_4_Group','Flower_4_Single','Grass_Common_Short','Clover_1','Clover_2','Fern_1'];
+const o=document.getElementById('o');let bad=0,total=0;
+const abs=u=>new URL(u,location.href).href;
+function line(ok,name,info,url){total++;if(!ok)bad++;
+ o.insertAdjacentHTML('beforeend','<div class="'+(ok?'ok':'bad')+'">'+(ok?'✔ ':'✘ ')+name+' — '+info+(ok?'':'<br><code>'+abs(url)+'</code>')+'</div>')}
+async function get(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)return{ok:false,info:'HTTP '+r.status};return{ok:true,r}}catch(e){return{ok:false,info:'فشل الاتصال'}}}
+(async()=>{
+ o.innerHTML='<div class="s">الصفحة: <code>'+location.href+'</code><br>مجلد assets المتوقع: <code>'+abs(B)+'</code></div><h4>ملفات الحركات</h4>';
+ for(const n of anim){const g=await get(B+n);if(!g.ok){line(0,n,g.info,B+n);continue}
+  const b=await g.r.arrayBuffer(),h=new TextDecoder().decode(new Uint8Array(b,0,4));
+  line(h==='glTF',n,(b.byteLength/1048576).toFixed(1)+' MB'+(h==='glTF'?'':' (ليس ملف GLB صحيح)'),B+n)}
+ o.insertAdjacentHTML('beforeend','<h4>ملفات الطبيعة</h4>');
+ for(const n of nat){const u=B+N+n+'.gltf',g=await get(u);if(!g.ok){line(0,n+'.gltf',g.info,u);continue}
+  let j;try{j=JSON.parse(await g.r.text())}catch(e){line(0,n+'.gltf','الملف تالف أو ليس gltf',u);continue}
+  const deps=[...(j.buffers||[]),...(j.images||[])].map(x=>x.uri).filter(x=>x&&!/^data:/.test(x)&&!/_Normal\.png/i.test(x));
+  const miss=[];for(const d of deps){const q=await get(B+N+decodeURIComponent(d));if(!q.ok)miss.push(d)}
+  line(!miss.length,n+'.gltf',miss.length?'ينقصه: '+miss.join(' ، '):'كامل ('+deps.length+' ملف مرتبط)',u)}
+ o.insertAdjacentHTML('afterbegin','<div class="s '+(bad?'bad':'ok')+'">'+(bad?'النتيجة: '+bad+' مشكلة من '+total+' فحص':'كل الملفات سليمة ✔')+'</div>');
+})();
+</script></body></html>
