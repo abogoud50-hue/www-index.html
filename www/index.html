@@ -277,12 +277,12 @@ o.tick=(px,pz,T)=>{
  want.forEach(i=>{if(!hid.has(i)){hid.set(i,[A.slice(i*16,i*16+16),B.slice(i*32,i*32+16),B.slice(i*32+16,i*32+32)]);
   A.fill(0,i*16,i*16+16);A[i*16+15]=1;B.fill(0,i*32,i*32+32);B[i*32+15]=1;B[i*32+31]=1;ch=true}});
  if(ch){trI.instanceMatrix.needsUpdate=true;lfI.instanceMatrix.needsUpdate=true}};
-const names=[...new Set(CFG.flatMap(c=>c.F.map(f=>f[0])))];let left=names.length,okN=0;
+let NATERR='';const names=[...new Set(CFG.flatMap(c=>c.F.map(f=>f[0])))];let left=names.length,okN=0;
 const fin=()=>{if(--left>0)return;
  build();
- if(!okN)setTimeout(()=>toast('لم تُحمّل ملفات الطبيعة. تأكد أنها داخل assets/nature'),1800);
+ if(!okN)setTimeout(()=>toast('لم تُحمّل ملفات الطبيعة. جرّبت: '+NATERR),1800);
  else if(okN<names.length)setTimeout(()=>toast('تحميل جزئي للطبيعة: '+okN+' من '+names.length+' مجسم'),1800)};
-names.forEach(n=>ld.load(DIR+n+'.gltf',g=>{try{prep(n,g.scene);okN++}catch(e){console.warn('NAT خطأ في',n,e)}fin()},undefined,()=>{console.warn('NAT ناقص:',n);fin()}));
+names.forEach(n=>ld.load(DIR+n+'.gltf',g=>{try{prep(n,g.scene);okN++}catch(e){console.warn('NAT خطأ في',n,e)}fin()},undefined,()=>{console.warn('NAT ناقص:',n);if(!NATERR)NATERR=new URL(DIR+n+'.gltf',location.href).href;fin()}));
 return o})();
 
 function char(s){
@@ -672,7 +672,7 @@ const clk=new THREE.Clock(),mc=$('mm').getContext('2d');let lb0='',h4=0,ai0='',p
 const AUTO_RES=false;const PERF=/[?&]perf/.test(location.search);let pfEl=null,pfT=0,pfN=0;
 function dynTick(nw){
  if(PERF){if(!pfEl){pfEl=document.createElement('div');pfEl.style.cssText='position:fixed;left:50%;top:4px;transform:translateX(-50%);z-index:99;font:11px monospace;background:rgba(0,0,0,.6);color:#0f0;padding:3px 8px;border-radius:6px;pointer-events:none;white-space:pre';document.body.appendChild(pfEl)}
-  pfN++;if(nw-pfT>500){const i=R.info.render;pfEl.textContent=Math.round(pfN*1000/(nw-pfT))+'fps calls '+i.calls+' tri '+(i.triangles/1000|0)+'k res '+R.getPixelRatio().toFixed(2)+' q'+S.q;pfT=nw;pfN=0}}
+  pfN++;if(nw-pfT>500){const i=R.info.render;pfEl.textContent='v4 GL:'+(THREE.GLTFLoader?1:0)+' '+Math.round(pfN*1000/(nw-pfT))+'fps calls '+i.calls+' tri '+(i.triangles/1000|0)+'k res '+R.getPixelRatio().toFixed(2)+' q'+S.q;pfT=nw;pfN=0}}
  if(!AUTO_RES||S.q<1||DYN.stop)return;
  if(DYN.t){const d=nw-DYN.t;if(d<250&&nw>DYN.w){DYN.s+=d;DYN.n++}}DYN.t=nw;
  if(DYN.n<40)return;
