@@ -247,7 +247,10 @@ const rk=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1,0),mat(0x8d909
 for(let i=0,a=0,b=0;i<3000&&(a<350||b<500);i++){const x=srn(-208,208),z=srn(-208,208);if(roadD(x,z)<3||lakeQ(x,z)<1.15||(Math.abs(x)<FX+2&&Math.abs(z)<FZ+2)||hs.some(h=>Math.hypot(x-h.x,z-h.z)<8||tp.some(t=>(x-t[0])**2+(z-t[1])**2<12))continue;
  if(i&1&&a<350){const s=srn(.25,.9);D.position.set(x,H(x,z)+s*.3,z);D.scale.set(s,s*.7,s);D.rotation.set(0,srn(0,6),0);D.updateMatrix();RKP.push([x,z]);rk.setMatrixAt(a++,D.matrix)}
  else if(b<500){const s=srn(.4,.9);D.position.set(x,H(x,z)+s*.4,z);D.scale.set(s,s*.8,s);D.rotation.set(0,0,0);D.updateMatrix();bu.setMatrixAt(b,D.matrix);bu.setColorAt(b++,new THREE.Color([0x2fa83a,0x3fc04a,0x238f34,0x56d65a][i%4]))}}
-rk.castShadow=bu.castShadow=true;scene.add(rk,bu);
+rk.castShadow=bu.castShadow=true;
+const OG=new Uint8Array(160*160),OGm=(x,z,r)=>{for(let a=Math.floor((x-r+225)/3);a<=Math.floor((x+r+225)/3);a++)for(let b=Math.floor((z-r+225)/3);b<=Math.floor((z+r+225)/3);b++)if(a>=0&&b>=0&&a<160&&b<160)OG[a*160+b]=1};
+tp.forEach(t=>OGm(t[0],t[1],3));RKP.forEach(r=>OGm(r[0],r[1],1.5));
+const OGc=(x,z)=>{const a=Math.floor((x+225)/3),b=Math.floor((z+225)/3);return a>=0&&b>=0&&a<160&&b<160&&OG[a*160+b]===1};scene.add(rk,bu);
 /* ===== طبيعة glTF: مجسمات حقيقية تظهر قرب اللاعب فقط (assets/nature) ===== */
 const NAT=(()=>{
 const o={ready:false,lx:1e9,lz:1e9,last:-9,cats:[],hid:new Map()};
@@ -257,7 +260,7 @@ const DIR='../assets/nature/',BL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA
 const mgr=new THREE.LoadingManager();mgr.setURLModifier(u=>/_Normal\.png/i.test(u)?BL:u);
 const ld=new THREE.GLTFLoader(mgr),MC={},LM={};
 const hs1=i=>{const q=Math.sin(i*127.1+311.7)*43758.5453;return q-Math.floor(q)};
-const okPos=(x,z,rr)=>!(roadD(x,z)<rr||lakeQ(x,z)<1.25||(Math.abs(x)<FX+2&&Math.abs(z)<FZ+2)||hs.some(h=>Math.hypot(x-h.x,z-h.z)<rr+4)||Math.hypot(x+32,z+12)<4||(rr>=3&&(tp.some(t=>(x-t[0])**2+(z-t[1])**2<9)||RKP.some(r=>(x-r[0])**2+(z-r[1])**2<2.25))));
+const okPos=(x,z,rr)=>!(roadD(x,z)<rr||lakeQ(x,z)<1.25||(Math.abs(x)<FX+2&&Math.abs(z)<FZ+2)||hs.some(h=>Math.hypot(x-h.x,z-h.z)<rr+4)||Math.hypot(x+32,z+12)<4||(rr>=3&&OGc(x,z)));
 /* K=أقصى عدد قريب من اللاعب، R=أقصى مسافة، النطاقات [اسم,أصغر حجم,أكبر حجم] — أضف ملفات جديدة (صخور، بيوت...) هنا بسطر واحد */
 const CFG=[
 {id:'trees',K:260,R:170,cast:1,tp:1,ang:1,F:[['CommonTree_1',.5],['CommonTree_2',.5],['CommonTree_3',.5],['CommonTree_4',.5],['CommonTree_5',.5]]},
@@ -707,9 +710,9 @@ let npcN=false;
 const clk=new THREE.Clock(),mc=$('mm').getContext('2d');let lb0='',h4=0,ai0='',pr=0;
 const AUTO_RES=false;let BOOT=1;const BT0=performance.now();const PERF=/[?&]perf/.test(location.search);let pfEl=null,pfT=0,pfN=0;
 function dynTick(nw){
- if(BOOT){const e=nw-BT0;if(e>2600&&((NAT.ready&&ANIM.ready)||e>7000)){BOOT=0;const b=$('boot');if(b){b.style.opacity=0;setTimeout(()=>b.remove(),700)}}}
+ if(BOOT){const e=nw-BT0;if(e>1800&&((NAT.ready&&ANIM.ready)||e>7000)){BOOT=0;const b=$('boot');if(b){b.style.opacity=0;setTimeout(()=>b.remove(),700)}}}
  if(PERF){if(!pfEl){pfEl=document.createElement('div');pfEl.style.cssText='position:fixed;left:50%;top:4px;transform:translateX(-50%);z-index:99;font:11px monospace;background:rgba(0,0,0,.6);color:#0f0;padding:3px 8px;border-radius:6px;pointer-events:none;white-space:pre';document.body.appendChild(pfEl)}
-  pfN++;if(nw-pfT>500){const i=R.info.render;pfEl.textContent='v6 GL:'+(THREE.GLTFLoader?1:0)+' '+Math.round(pfN*1000/(nw-pfT))+'fps calls '+i.calls+' tri '+(i.triangles/1000|0)+'k res '+R.getPixelRatio().toFixed(2)+' q'+S.q;pfT=nw;pfN=0}}
+  pfN++;if(nw-pfT>500){const i=R.info.render;pfEl.textContent='v7 GL:'+(THREE.GLTFLoader?1:0)+' '+Math.round(pfN*1000/(nw-pfT))+'fps calls '+i.calls+' tri '+(i.triangles/1000|0)+'k res '+R.getPixelRatio().toFixed(2)+' q'+S.q;pfT=nw;pfN=0}}
  if(!AUTO_RES||S.q<1||DYN.stop)return;
  if(DYN.t){const d=nw-DYN.t;if(d<250&&nw>DYN.w){DYN.s+=d;DYN.n++}}DYN.t=nw;
  if(DYN.n<40)return;
@@ -765,5 +768,6 @@ hud();loop();
 })();
 
 </script>
+<script>setTimeout(function(){var b=document.getElementById('boot');if(b){b.style.opacity=0;setTimeout(function(){b.remove()},700)}},9000);addEventListener('error',function(){var b=document.getElementById('boot');if(b)b.remove()});</script>
 </body>
 </html>
